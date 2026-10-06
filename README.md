@@ -4,7 +4,14 @@ A bilingual (French and English) dashboard for following Quebec's 2026 provincia
 
 ## Open the app
 
-Open `index.html` in a modern browser. No build step or package installation is required. An internet connection is needed for live results.
+Open the app via a local web server for the full PWA experience, such as:
+
+```bash
+cd /path/to/elections
+python3 -m http.server 8000
+```
+
+Then visit `http://localhost:8000/` in a modern browser. The app is installable as a PWA on supported browsers and loads cached shell assets offline after the first visit. An internet connection is still needed for live results.
 
 ## Live results
 
