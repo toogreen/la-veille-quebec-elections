@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f5ef">
+  <title>La Veille — Quebec election tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f5f5ef;
+      --surface: #fffefa;
+      --ink: #1a2825;
+      --muted: #71807a;
+      --line: #e3e7df;
+      --green: #176b52;
+      --green-light: #e5f1e9;
+      --blue: #3476b8;
+      --blue-light: #e8f0fa;
+      --gold: #dfb34c;
+      --red: #b85854;
+      --shadow: 0 12px 36px rgba(29, 47, 39, .055);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 14px/1.5 'DM Sans', sans-serif; }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    .app { min-height: 100vh; }
+    .topbar { height: 70px; border-bottom: 1px solid var(--line); background: rgba(255,254,250,.84); display: flex; align-items: center; justify-content: space-between; padding: 0 5.2vw; position: sticky; z-index: 10; top: 0; backdrop-filter: blur(12px); }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
+    .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: white; background: var(--green); }
+    .brand-mark svg { width: 19px; height: 19px; }
+    .brand-name { font: 600 21px/1 'Newsreader', Georgia, serif; letter-spacing: 0; }
+    .brand-note { margin-left: 4px; color: var(--muted); font-size: 12px; }
+    .nav { display: flex; align-items: center; gap: 26px; height: 100%; }
+    .nav button { background: none; border: 0; height: 100%; padding: 0 2px; color: var(--muted); cursor: pointer; position: relative; font-size: 13px; }
+    .nav button.active { color: var(--ink); font-weight: 700; }
+    .nav button.active::after { content: ''; position: absolute; bottom: -1px; height: 2px; left: 0; right: 0; background: var(--green); }
+    .top-right { display: flex; align-items: center; gap: 12px; }
+    .live-pill { display: flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 99px; padding: 7px 11px; font: 11px 'DM Mono', monospace; color: #617069; letter-spacing: 0; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 3px rgba(223,179,76,.16); }
+    .language-switch { display: flex; align-items: center; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: 5px; }
+    .language-switch button { border: 0; border-radius: 3px; padding: 4px 6px; background: transparent; color: var(--muted); cursor: pointer; font: 10px 'DM Mono', monospace; }
+    .language-switch button[aria-pressed="true"] { background: var(--green); color: white; }
+    main { max-width: 1230px; margin: 0 auto; padding: 37px 28px 56px; }
+    .eyebrow { text-transform: uppercase; letter-spacing: 1.15px; font: 10px 'DM Mono', monospace; color: var(--green); }
+    .hero { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; gap: 18px; }
+    h1 { font: 500 39px/.98 'Newsreader', Georgia, serif; letter-spacing: 0; margin: 7px 0 8px; }
+    .subhead { margin: 0; color: var(--muted); font-size: 13px; }
+    .event-date { display: flex; align-items: center; gap: 11px; padding: 11px 14px; border: 1px solid var(--line); border-radius: 6px; background: rgba(255,254,250,.65); }
+    .date-icon { height: 33px; width: 33px; border-radius: 5px; background: var(--green-light); color: var(--green); display: grid; place-items: center; }
+    .date-icon svg { width: 17px; height: 17px; }
+    .event-date strong { display: block; font-size: 12px; }
+    .event-date small { display: block; color: var(--muted); font-size: 11px; }
+    .notice { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 13px; margin-bottom: 16px; background: #f8f1dc; border: 1px solid #eee2be; border-radius: 5px; color: #6c5b31; font-size: 11px; }
+    .notice strong { font-weight: 700; }
+    .notice button { background: transparent; border: 0; color: #6c5b31; cursor: pointer; font-weight: 700; white-space: nowrap; }
+    .metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 14px; }
+    .metric { min-height: 104px; padding: 15px 17px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--shadow); }
+    .metric-label { color: var(--muted); font-size: 11px; }
+    .metric-value { display: flex; align-items: baseline; gap: 8px; margin: 6px 0 2px; font: 500 27px/1 'Newsreader', Georgia, serif; }
+    .metric-value span { font: 11px 'DM Sans', sans-serif; color: var(--muted); }
+    .metric-foot { color: var(--muted); font-size: 10px; }
+    .metric-foot b { color: var(--green); font-weight: 600; }
+    .metric-value .live-leader-name { max-width: 175px; font: 600 11px/1.2 'DM Sans', sans-serif; }
+    .live-panel { margin-bottom: 14px; }
+    .live-panel .panel-head { align-items: center; }
+    .live-actions { display: flex; align-items: center; gap: 10px; }
+    .live-updated { color: var(--muted); font: 10px 'DM Mono', monospace; white-space: nowrap; }
+    .live-controls { display: flex; align-items: center; gap: 8px; }
+    .live-button, .official-link { min-height: 30px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 5px 9px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); cursor: pointer; text-decoration: none; font-size: 10px; white-space: nowrap; }
+    .live-button:disabled { opacity: .55; cursor: wait; }
+    .live-button svg { width: 13px; height: 13px; }
+    .official-link { border-color: #c6dacf; color: var(--green); }
+    .live-grid { display: grid; grid-template-columns: minmax(235px,.8fr) minmax(0,1.4fr); gap: 20px; padding: 15px 18px 17px; }
+    .live-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-content: start; }
+    .live-stat { padding: 11px 12px; border: 1px solid var(--line); border-radius: 4px; background: #fcfcf8; }
+    .live-stat-label { color: var(--muted); font-size: 10px; }
+    .live-stat-value { margin-top: 4px; font: 500 20px/1.1 'Newsreader', Georgia, serif; }
+    .live-stat-detail { margin-top: 4px; color: var(--muted); font-size: 9px; }
+    .live-party-heading { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; margin: 0 0 7px; }
+    .live-party-heading h3 { margin: 0; font: 600 15px 'Newsreader', Georgia, serif; }
+    .live-party-heading span { color: var(--muted); font-size: 9px; }
+    .live-parties { display: grid; gap: 3px; }
+    .live-party-row { display: grid; grid-template-columns: minmax(115px,1fr) 83px 37px; gap: 10px; align-items: center; padding: 5px 0; border-bottom: 1px solid #eef0eb; }
+    .live-party-name { min-width: 0; display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 600; }
+    .live-party-name span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .live-party-dot { flex: 0 0 8px; width: 8px; height: 8px; border-radius: 50%; }
+    .live-party-votes { color: #506058; text-align: right; font: 10px 'DM Mono', monospace; white-space: nowrap; }
+    .live-party-votes small { display: block; color: var(--muted); font: 9px 'DM Sans', sans-serif; }
+    .live-party-leads { text-align: right; font: 500 15px 'Newsreader', Georgia, serif; }
+    .live-party-leads small { display: block; color: var(--muted); font: 8px 'DM Sans', sans-serif; }
+    .live-bar { height: 3px; margin: -1px 0 2px 15px; border-radius: 3px; background: #edf0eb; overflow: hidden; }
+    .live-bar span { display: block; height: 100%; border-radius: inherit; }
+    .live-foot { display: flex; justify-content: space-between; gap: 10px; padding: 0 18px 12px; color: var(--muted); font-size: 9px; }
+    .live-error { color: #a2443b; }
+    .live-button.spinning svg { animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .content-grid { display: grid; grid-template-columns: minmax(0,1.42fr) minmax(300px,.88fr); gap: 14px; align-items: stretch; }
+    .panel { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--shadow); }
+    .panel-head { padding: 17px 18px 13px; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--line); gap: 14px; }
+    .panel-title { margin: 0; font: 600 18px/1.1 'Newsreader', Georgia, serif; }
+    .panel-caption { margin: 4px 0 0; font-size: 10px; color: var(--muted); }
+    .select { color: #596760; border: 1px solid var(--line); background: #fffefa; border-radius: 4px; padding: 6px 9px; font-size: 10px; cursor: pointer; }
+    .chart-wrap { padding: 13px 17px 10px; }
+    .legend { display: flex; gap: 15px; flex-wrap: wrap; padding: 0 2px 9px; }
+    .legend span { display: flex; align-items: center; gap: 6px; color: #596760; font-size: 10px; }
+    .legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; }
+    .chart { width: 100%; height: auto; display: block; overflow: visible; }
+    .chart text { font: 10px 'DM Sans', sans-serif; fill: #7a8882; }
+    .chart .year { fill: #52615a; font-weight: 700; }
+    .chart .gridline { stroke: #e8ebe5; stroke-width: 1; }
+    .chart .axisline { stroke: #dce2da; stroke-width: 1; }
+    .chart-note { margin: -1px 0 0; color: var(--muted); font-size: 9px; }
+    .party-list { padding: 4px 18px 13px; }
+    .party-row { display: grid; grid-template-columns: 1fr 88px 36px; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #eef0eb; }
+    .party-row:last-child { border: 0; }
+    .party-name { font-size: 11px; font-weight: 600; }
+    .party-meta { color: var(--muted); font-size: 9px; margin-top: 1px; }
+    .bar-track { height: 5px; border-radius: 5px; background: #edf0eb; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 5px; }
+    .party-seats { text-align: right; font: 500 17px 'Newsreader', Georgia, serif; }
+    .party-seats small { display: block; color: var(--muted); font: 9px 'DM Sans', sans-serif; }
+    .right-stack { display: grid; grid-template-rows: 1fr auto; gap: 14px; }
+    .map-panel { overflow: hidden; }
+    .map-head { padding: 17px 18px 0; display: flex; justify-content: space-between; align-items: flex-start; }
+    .map-art { width: 100%; height: 180px; display: block; padding: 0 15px; }
+    .map-caption { display: flex; justify-content: space-between; padding: 0 18px 13px; color: var(--muted); font-size: 9px; }
+    .activity { padding-bottom: 3px; }
+    .activity .panel-head { padding-bottom: 10px; }
+    .updates { padding: 0 18px 7px; }
+    .update { display: grid; grid-template-columns: 24px 1fr auto; gap: 9px; align-items: start; padding: 9px 0; border-bottom: 1px solid #eef0eb; }
+    .update:last-child { border: 0; }
+    .update-icon { width: 23px; height: 23px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-weight: 700; background: var(--blue-light); color: var(--blue); }
+    .update:nth-child(2) .update-icon { background: #f8eddf; color: #a46d2a; }
+    .update:nth-child(3) .update-icon { background: var(--green-light); color: var(--green); }
+    .update strong { display: block; font-size: 10px; }
+    .update p { margin: 1px 0 0; color: var(--muted); font-size: 9px; line-height: 1.35; }
+    .update time { color: #89958f; font: 9px 'DM Mono', monospace; white-space: nowrap; }
+    .riding-section { margin-top: 15px; }
+    .riding-panel .panel-head { align-items: center; }
+    .riding-controls { display: flex; gap: 8px; align-items: center; }
+    .searchbox { position: relative; }
+    .searchbox svg { position: absolute; width: 14px; height: 14px; left: 9px; top: 8px; color: #7d8983; }
+    .searchbox input { width: 185px; padding: 7px 9px 7px 29px; border: 1px solid var(--line); border-radius: 4px; background: #fffefa; color: var(--ink); font-size: 10px; outline: none; }
+    .searchbox input:focus { border-color: var(--green); }
+    .riding-table { width: 100%; border-collapse: collapse; }
+    .riding-table th { text-align: left; padding: 8px 18px; color: #7e8a84; text-transform: uppercase; letter-spacing: .65px; font: 9px 'DM Mono', monospace; background: #fafbf7; }
+    .riding-table td { padding: 10px 18px; border-top: 1px solid #eef0eb; font-size: 11px; }
+    .riding-table tr.data-row { cursor: pointer; }
+    .riding-table tr.data-row:hover { background: #f7faf5; }
+    .riding-name { font-weight: 600; }
+    .riding-area { color: var(--muted); font-size: 9px; margin-top: 1px; }
+    .party-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; }
+    .party-tag i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+    .status { border-radius: 99px; padding: 3px 7px; font-size: 9px; background: #eff1ed; color: #69766f; white-space: nowrap; }
+    .status.baseline { background: var(--green-light); color: var(--green); }
+    .table-foot { display: flex; justify-content: space-between; padding: 9px 18px 12px; color: var(--muted); font-size: 9px; }
+    .footer { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-top: 14px; color: #849089; font-size: 10px; }
+    .footer a { color: var(--green); text-decoration: none; }
+    .toast { position: fixed; z-index: 20; bottom: 22px; left: 50%; transform: translate(-50%, 15px); opacity: 0; pointer-events: none; background: var(--ink); color: white; padding: 10px 15px; border-radius: 4px; font-size: 11px; transition: .2s ease; }
+    .toast.show { opacity: 1; transform: translate(-50%,0); }
+    .empty { text-align: center; color: var(--muted); padding: 20px !important; }
+    @media (max-width: 800px) {
+      .topbar { padding: 0 20px; }
+      .brand-note { display: none; }
+      main { padding: 28px 20px 40px; }
+      .content-grid { grid-template-columns: 1fr; }
+      .right-stack { grid-template-columns: 1fr 1fr; grid-template-rows: auto; }
+      .map-art { height: 156px; }
+      .metrics { grid-template-columns: repeat(2,1fr); }
+      .live-grid { grid-template-columns: 1fr; gap: 16px; }
+    }
+    @media (max-width: 560px) {
+      .topbar { height: 60px; padding: 0 14px; }
+      .nav { gap: 15px; }
+      .nav button { font-size: 11px; }
+      .live-pill { padding: 6px 8px; font-size: 9px; }
+      .topbar { gap: 8px; padding: 0 10px; }
+      .brand { gap: 7px; }
+      .brand-name { font-size: 18px; }
+      .nav { gap: 8px; }
+      .nav button { font-size: 10px; }
+      .top-right { gap: 4px; }
+      .live-pill { font-size: 0; padding: 7px; }
+      main { padding: 24px 14px 32px; }
+      .hero { align-items: flex-start; flex-direction: column; margin-bottom: 17px; }
+      h1 { font-size: 34px; }
+      .event-date { align-self: stretch; }
+      .notice { align-items: flex-start; }
+      .notice button { white-space: normal; text-align: right; }
+      .metrics { gap: 8px; }
+      .metric { min-height: 95px; padding: 12px; }
+      .metric-value { font-size: 24px; }
+      .live-panel .panel-head { align-items: flex-start; flex-direction: column; }
+      .live-actions { align-items: flex-start; flex-direction: column; }
+      .live-controls { width: 100%; }
+      .live-button, .official-link { flex: 1; }
+      .live-grid { padding: 12px; }
+      .live-party-row { grid-template-columns: minmax(100px,1fr) 78px 34px; gap: 6px; }
+      .live-foot { padding: 0 12px 12px; flex-direction: column; }
+      .right-stack { grid-template-columns: 1fr; }
+      .map-art { height: 180px; }
+      .panel-head { padding-left: 13px; padding-right: 13px; }
+      .riding-panel .panel-head { align-items: flex-start; flex-direction: column; }
+      .riding-controls { width: 100%; }
+      .searchbox { flex: 1; }
+      .searchbox input { width: 100%; }
+      .riding-table th, .riding-table td { padding-left: 10px; padding-right: 10px; }
+      .riding-table th:nth-child(3), .riding-table td:nth-child(3) { display: none; }
+      .footer { align-items: flex-start; flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="La Veille home" data-i18n-aria="brandHome">
+        <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v18M5.5 7.5 12 11l6.5-3.5M5.5 16.5 12 13l6.5 3.5M8 5l4 2 4-2M8 19l4-2 4 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="brand-name">La Veille</span><span class="brand-note" data-i18n="brandNote">Quebec election desk</span>
+      </a>
+      <nav class="nav" aria-label="Main navigation" data-i18n-aria="mainNavigation">
+        <button class="active" data-view="overview" data-i18n="navOverview">Overview</button>
+        <button data-view="ridings" data-i18n="navRidings">Ridings</button>
+        <button data-view="history" data-i18n="navHistory">History</button>
+      </nav>
+      <div class="top-right"><span class="live-pill"><i class="dot"></i> <span id="headerFeedStatus" data-i18n="feedConnecting">Connecting</span></span><div class="language-switch" role="group" aria-label="Language" data-i18n-aria="languageSelector"><button type="button" data-language="en" aria-pressed="false">EN</button><button type="button" data-language="fr" aria-pressed="true">FR</button></div></div>
+    </header>
+    <main id="top">
+      <section class="hero">
+        <div><div class="eyebrow" data-i18n="region">Quebec · National Assembly</div><h1 data-i18n="pageTitle">The election desk</h1><p class="subhead" data-i18n="pageSubtitle">A clear view of the races, the ridings, and the numbers that shape Quebec.</p></div>
+        <div class="event-date"><span class="date-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="6" width="16" height="15" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 3v5m8-5v5M4 10h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span><div><strong data-i18n="electionName">Provincial election · 2026</strong><small data-i18n="electionStatus">Monday, October 5 · Live results</small></div></div>
+      </section>
+      <div class="notice" id="notice"><span><strong id="liveStatusText" data-i18n="liveLoading">Connecting to official results…</strong> <span data-i18n="liveDisclosure">Preliminary results update as polling stations report; final results are confirmed after the official count.</span></span><button id="dismissNotice" aria-label="Dismiss notice" data-i18n-aria="dismissNotice">Got it ×</button></div>
+      <section class="metrics" aria-label="Election summary" data-i18n-aria="electionSummary">
+        <article class="metric"><div class="metric-label" data-i18n="assemblySeats">Seats in the Assembly</div><div class="metric-value"><span id="liveSeatCount">127</span> <span data-i18n="ridingsUnit">ridings</span></div><div class="metric-foot" data-i18n="currentElection">Current election</div></article>
+        <article class="metric"><div class="metric-label" data-i18n="majorityThreshold">Majority threshold</div><div class="metric-value"><span id="liveMajorityCount">64</span> <span data-i18n="seatsUnit">seats</span></div><div class="metric-foot" data-i18n="majorityGovernment">A majority government</div></article>
+        <article class="metric"><div class="metric-label" data-i18n="currentTurnout">Voter turnout</div><div class="metric-value"><span id="liveTurnout">—</span><span>%</span></div><div class="metric-foot" data-i18n="preliminary">Preliminary</div></article>
+        <article class="metric"><div class="metric-label" data-i18n="mostLeads">Most riding leads</div><div class="metric-value" style="color:var(--green)"><b id="liveLeaderAbbr">—</b><span id="liveLeaderName" class="live-leader-name"></span></div><div class="metric-foot"><b id="liveLeaderCount">—</b> <span data-i18n="leadingRidings">leading in ridings</span></div></article>
+      </section>
+      <section class="panel live-panel" aria-labelledby="livePanelTitle">
+        <div class="panel-head"><div><h2 class="panel-title" id="livePanelTitle" data-i18n="livePanelTitle">Live results</h2><p class="panel-caption" data-i18n="livePanelCaption">Official preliminary counts from Élections Québec</p></div><div class="live-actions"><span class="live-updated" id="liveUpdated" data-i18n="waitingForUpdate">Waiting for first update</span><div class="live-controls"><button type="button" class="live-button" id="refreshLive"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 7v5h-5M4.9 9A7.5 7.5 0 0 1 18 6l2 2M4 17v-5h5m6.1 4A7.5 7.5 0 0 1 6 18l-2-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="refreshNow">Refresh now</span></button><a class="official-link" id="officialResultsLink" href="https://www.electionsquebec.qc.ca/resultats-et-statistiques/resultats-elections-generales-provinciales-en-direct/" target="_blank" rel="noreferrer" data-i18n="officialResults">Official results ↗</a></div></div></div>
+        <div class="live-grid"><div class="live-stats"><div class="live-stat"><div class="live-stat-label" data-i18n="stationsReported">Polling stations reported</div><div class="live-stat-value" id="liveStationsPercent">—</div><div class="live-stat-detail" id="liveStationsCount">—</div></div><div class="live-stat"><div class="live-stat-label" data-i18n="validBallots">Valid ballots</div><div class="live-stat-value" id="liveValidBallots">—</div><div class="live-stat-detail" data-i18n="reportedToDate">Reported to date</div></div><div class="live-stat"><div class="live-stat-label" data-i18n="votesCast">Votes cast</div><div class="live-stat-value" id="liveVotesCast">—</div><div class="live-stat-detail" data-i18n="includingRejected">Including rejected ballots</div></div><div class="live-stat"><div class="live-stat-label" data-i18n="ridingResults">Ridings with results</div><div class="live-stat-value" id="liveRidingResults">—</div><div class="live-stat-detail" data-i18n="of127Ridings">of 127 ridings</div></div></div><div><div class="live-party-heading"><h3 data-i18n="partyStandings">Party standings</h3><span data-i18n="unofficialLeads">Riding leads · unofficial</span></div><div class="live-parties" id="liveParties"><p class="panel-caption" data-i18n="liveLoading">Connecting to official results…</p></div></div></div>
+        <div class="live-foot"><span data-i18n="preliminaryDisclosure">Preliminary results; candidate leads are not certified winners.</span><span data-i18n="autoRefreshDisclosure">Auto-refreshes every 60 seconds · official feed may cache for up to 2 minutes.</span></div>
+      </section>
+      <section class="content-grid" id="overviewContent">
+        <article class="panel" id="historyPanel">
+          <div class="panel-head"><div><h2 class="panel-title" data-i18n="historyTitle">The Assembly, over time</h2><p class="panel-caption" data-i18n="historyCaption">Seats won in the last three provincial elections</p></div><select class="select" id="chartMode" aria-label="Chart metric" data-i18n-aria="chartMetric"><option value="seats" data-i18n="seatsWon">Seats won</option><option value="vote" data-i18n="popularVote">Popular vote</option></select></div>
+          <div class="chart-wrap">
+            <div class="legend" id="legend"></div>
+            <svg class="chart" id="historyChart" viewBox="0 0 560 220" role="img" aria-label="Stacked bar chart of Quebec election results"></svg>
+            <p class="chart-note" data-i18n="chartSource">Sources: Élections Québec · Popular vote figures rounded.</p>
+          </div>
+        </article>
+        <div class="right-stack">
+          <article class="panel map-panel">
+            <div class="map-head"><div><h2 class="panel-title" data-i18n="mapTitle">A province in 125 parts</h2><p class="panel-caption" data-i18n="mapCaption">The 2022 seat map, by winning party</p></div><span class="eyebrow">2022</span></div>
+            <svg class="map-art" viewBox="0 0 390 205" role="img" aria-label="Illustrative map of Quebec election results by region" data-i18n-aria="mapDescription">
+              <defs><pattern id="dots" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#8ca39a" opacity=".22"/></pattern></defs>
+              <path d="M67 29 102 16l31 8 26-12 39 16 31-3 19 19 38 7 15 25 29 15-8 28 18 14-24 20-21 29-41-9-22 10-25-13-28 10-23-15-24 6-21-20-28 1-13-21-23-4 2-30-13-18 12-25-9-29 16-20z" fill="#edf1ea" stroke="#d0d9d1" stroke-width="1.5"/>
+              <path d="M67 29 102 16l31 8 26-12 39 16 31-3 19 19 38 7 15 25 29 15-8 28 18 14-24 20-21 29-41-9-22 10-25-13-28 10-23-15-24 6-21-20-28 1-13-21-23-4 2-30-13-18 12-25-9-29 16-20z" fill="url(#dots)"/>
+              <path d="M80 49q35 10 56 35t53 20q38-1 52 27t58 8" fill="none" stroke="#bfcac1" stroke-width="1" stroke-dasharray="3 4"/>
+              <g fill="#176b52"><circle cx="124" cy="52" r="5"/><circle cx="150" cy="68" r="5"/><circle cx="176" cy="52" r="5"/><circle cx="194" cy="81" r="5"/><circle cx="216" cy="57" r="5"/><circle cx="231" cy="94" r="5"/><circle cx="260" cy="75" r="5"/><circle cx="277" cy="107" r="5"/><circle cx="170" cy="119" r="5"/><circle cx="208" cy="130" r="5"/><circle cx="247" cy="148" r="5"/><circle cx="296" cy="133" r="5"/><circle cx="126" cy="98" r="5"/><circle cx="157" cy="147" r="5"/></g>
+              <g fill="#3476b8"><circle cx="104" cy="76" r="5"/><circle cx="143" cy="111" r="5"/><circle cx="187" cy="105" r="5"/><circle cx="228" cy="120" r="5"/><circle cx="269" cy="130" r="5"/><circle cx="303" cy="101" r="5"/></g>
+              <g fill="#dfb34c"><circle cx="159" cy="93" r="5"/><circle cx="218" cy="151" r="5"/></g>
+              <circle cx="143" cy="111" r="9" fill="none" stroke="#3476b8" stroke-opacity=".4"/>
+              <text x="91" y="174" font-family="DM Sans,sans-serif" font-size="9" fill="#71807a">Abitibi</text><text x="259" y="170" font-family="DM Sans,sans-serif" font-size="9" fill="#71807a">Gaspésie</text><text x="176" y="181" font-family="DM Sans,sans-serif" font-size="9" fill="#71807a">Montréal · Québec</text>
+            </svg>
+            <div class="map-caption"><span data-i18n="mapDisclaimer">Dots are illustrative, not riding boundaries</span><span>125 <span data-i18n="seatsUnit">seats</span></span></div>
+          </article>
+          <article class="panel activity">
+            <div class="panel-head"><div><h2 class="panel-title" data-i18n="archiveTitle">From the archive</h2><p class="panel-caption" data-i18n="archiveCaption">Milestones from election night</p></div></div>
+            <div class="updates">
+              <div class="update"><span class="update-icon">01</span><div><strong data-i18n="archivePolls">Polls close across Quebec</strong><p data-i18n="archivePollsDetail">Voting concludes at 8 p.m. EDT.</p></div><time>20:00</time></div>
+              <div class="update"><span class="update-icon">02</span><div><strong data-i18n="archiveMajority">CAQ wins a second majority</strong><p data-i18n="archiveMajorityDetail">François Legault's party returns to office.</p></div><time>22:14</time></div>
+              <div class="update"><span class="update-icon">03</span><div><strong data-i18n="archiveFinal">Final seat count confirmed</strong><p>CAQ 90 · PLQ 21 · QS 11 · PQ 3.</p></div><time data-i18n="octoberFourth">Oct 4</time></div>
+            </div>
+          </article>
+        </div>
+      </section>
+      <section class="riding-section" id="ridingSection">
+        <article class="panel riding-panel">
+          <div class="panel-head"><div><h2 class="panel-title" data-i18n="ridingTitle">Live riding results</h2><p class="panel-caption" data-i18n="ridingCaption">Current candidate leaders and polling-station progress</p></div><div class="riding-controls"><label class="searchbox"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3" stroke="currentColor" stroke-width="1.7"/><path d="m15.5 15.5 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><input id="ridingSearch" type="search" placeholder="Find a riding" aria-label="Find a riding" data-i18n-placeholder="searchRidings" data-i18n-aria="searchRidings"></label><select class="select" id="partyFilter" aria-label="Filter by leading party" data-i18n-aria="filterParty"><option value="all" data-i18n="allParties">All parties</option></select></div></div>
+          <div style="overflow-x:auto"><table class="riding-table"><thead><tr><th data-i18n="tableRiding">Riding</th><th data-i18n="tableWinner">Leading candidate</th><th data-i18n="tableParty">Party</th><th data-i18n="tableShare">Share</th><th data-i18n="tableStations">Stations</th></tr></thead><tbody id="ridingRows"></tbody></table></div>
+          <div class="table-foot"><span id="ridingCount"></span><span data-i18n="liveTableSource">Source: Élections Québec · Preliminary</span></div>
+        </article>
+      </section>
+      <footer class="footer"><span data-i18n="footerTitle">La Veille · An independent election reference</span><span><span data-i18n="historicalData">Historical data:</span> <a href="https://www.electionsquebec.qc.ca/" target="_blank" rel="noreferrer">Élections Québec</a></span></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>
+    const translations = {
+      en: {
+        documentTitle: 'La Veille — Quebec election tracker', brandHome: 'La Veille home', brandNote: 'Quebec election desk', mainNavigation: 'Main navigation',
+        navOverview: 'Overview', navRidings: 'Ridings', navHistory: 'History', feedPending: '2026 · FEED PENDING', feedLive: '2026 · LIVE RESULTS', languageSelector: 'Language',
+        region: 'Quebec · National Assembly', pageTitle: 'The election desk', pageSubtitle: 'A clear view of the races, the ridings, and the numbers that shape Quebec.',
+        electionName: 'Provincial election · 2026', electionStatus: 'Monday, October 5 · Live results', liveUnavailable: 'Live results are not connected.',
+        baselineNotice: 'This desk uses certified 2022 results as a baseline; riding rows are illustrative examples, not current results.', dismissNotice: 'Got it ×',
+        electionSummary: 'Election summary', assemblySeats: 'Seats in the Assembly', ridingsUnit: 'ridings', votingSystem: 'First past the post', currentElection: 'Current election',
+        majorityThreshold: 'Majority threshold', seatsUnit: 'seats', majorityGovernment: 'A majority government', currentTurnout: 'Voter turnout', preliminary: 'Preliminary', mostLeads: 'Most riding leads', leadingRidings: 'leading in ridings',
+        turnoutSource: 'Official 2022 turnout', seatLeader: '2022 seat leader', caqName: 'Coalition Avenir Québec', previousResult: 'previous result',
+        historyTitle: 'The Assembly, over time', historyCaption: 'Seats won in the last three provincial elections', chartMetric: 'Chart metric',
+        seatsWon: 'Seats won', popularVote: 'Popular vote', chartSource: 'Sources: Élections Québec · Popular vote figures rounded.',
+        chartSeatsAria: 'Seats won by party in the Quebec provincial elections, 2014, 2018 and 2022',
+        chartVoteAria: 'Popular vote percentage by party in the Quebec provincial elections, 2014, 2018 and 2022',
+        mapTitle: 'A province in 125 parts', mapCaption: 'The 2022 seat map, by winning party',
+        mapDescription: 'Illustrative map of Quebec election results by region', mapDisclaimer: 'Dots are illustrative, not riding boundaries',
+        archiveTitle: 'From the archive', archiveCaption: 'Milestones from election night', archivePolls: 'Polls close across Quebec',
+        archivePollsDetail: 'Voting concludes at 8 p.m. EDT.', archiveMajority: 'CAQ wins a second majority',
+        archiveMajorityDetail: "François Legault's party returns to office.", archiveFinal: 'Final seat count confirmed', octoberFourth: 'Oct 4',
+        feedConnecting: 'Connecting', feedUnavailableShort: 'Feed unavailable', feedDelayedShort: 'Update delayed',
+        liveLoading: 'Connecting to official results…', preliminaryResults: 'Preliminary results', finalResults: 'Final results', candidateVotes: 'votes',
+        liveDisclosure: 'Preliminary results update as polling stations report; final results are confirmed after the official count.',
+        livePanelTitle: 'Live results', livePanelCaption: 'Official preliminary counts from Élections Québec', waitingForUpdate: 'Waiting for first update',
+        refreshNow: 'Refresh now', officialResults: 'Official results ↗', stationsReported: 'Polling stations reported', validBallots: 'Valid ballots',
+        reportedToDate: 'Reported to date', votesCast: 'Votes cast', includingRejected: 'Including rejected ballots', ridingResults: 'Ridings with results',
+        of127Ridings: 'of 127 ridings', partyStandings: 'Party standings', unofficialLeads: 'Riding leads · unofficial',
+        preliminaryDisclosure: 'Preliminary results; candidate leads are not certified winners.', autoRefreshDisclosure: 'Auto-refreshes every 60 seconds · official feed may cache for up to 2 minutes.',
+        feedError: 'Live results are temporarily unavailable.', feedErrorDetail: 'Use the official results page for the latest update.',
+        liveUpdatedAt: 'Updated {time}', loadingRows: 'Loading live riding results…', retryRows: 'Could not load riding results. Try refreshing.',
+        ridingTitle: 'Live riding results', ridingCaption: 'Current candidate leaders and polling-station progress',
+        searchRidings: 'Find a riding', filterParty: 'Filter by winning party', allParties: 'All parties', liberalPartyShort: 'Liberal',
+        tableRiding: 'Riding', tableWinner: 'Leading candidate', tableParty: 'Party', tableShare: 'Share', tableResult: 'Result', tableStations: 'Stations', partialRidingList: 'Not a complete riding list', liveTableSource: 'Source: Élections Québec · Preliminary',
+        footerTitle: 'La Veille · An independent election reference', historicalData: 'Historical data:', elected2022: 'Elected · 2022',
+        noRidingsMatch: 'No ridings match these filters.', noCandidate: 'No reported leader',
+        ridingCountOne: 'Showing 1 of {total} ridings', ridingCountMany: 'Showing {shown} of {total} ridings',
+        ridingToast: '{name}: {party} won {share} in this illustrative 2022 record.',
+        chartTooltipSeats: 'seats', chartTooltipVote: 'of the popular vote'
+      },
+      fr: {
+        documentTitle: 'La Veille — Suivi des élections au Québec', brandHome: 'Accueil de La Veille', brandNote: 'Le bureau électoral du Québec', mainNavigation: 'Navigation principale',
+        navOverview: 'Aperçu', navRidings: 'Circonscriptions', navHistory: 'Historique', feedPending: '2026 · FLUX EN ATTENTE', feedLive: '2026 · RÉSULTATS EN DIRECT', languageSelector: 'Langue',
+        region: 'Québec · Assemblée nationale', pageTitle: 'Le bureau des élections', pageSubtitle: 'Suivez les courses, les circonscriptions et les chiffres qui façonnent le Québec.',
+        electionName: 'Élection générale provinciale · 2026', electionStatus: 'Lundi 5 octobre · Résultats en direct', liveUnavailable: 'Les résultats en direct ne sont pas connectés.',
+        baselineNotice: 'Ce tableau utilise les résultats certifiés de 2022 comme référence; les circonscriptions affichées sont des exemples, pas les résultats actuels.', dismissNotice: 'Compris ×',
+        electionSummary: 'Sommaire de l’élection', assemblySeats: 'Circonscriptions en jeu', ridingsUnit: 'circonscriptions', votingSystem: 'Élection provinciale de 2026', currentElection: 'Élection en cours',
+        majorityThreshold: 'Seuil de majorité', seatsUnit: 'sièges', majorityGovernment: 'Pour former un gouvernement majoritaire', currentTurnout: 'Taux de participation', preliminary: 'Préliminaire', mostLeads: 'En tête dans le plus de circonscriptions', leadingRidings: 'en tête',
+        turnoutSource: 'Participation officielle de 2022', seatLeader: 'En tête en 2022', caqName: 'Coalition avenir Québec', previousResult: 'résultat précédent',
+        historyTitle: 'L’Assemblée au fil du temps', historyCaption: 'Sièges remportés lors des trois dernières élections provinciales', chartMetric: 'Mesure du graphique',
+        seatsWon: 'Sièges remportés', popularVote: 'Vote populaire', chartSource: 'Sources : Élections Québec · Pourcentages du vote populaire arrondis.',
+        chartSeatsAria: 'Sièges remportés par parti aux élections provinciales du Québec de 2014, 2018 et 2022',
+        chartVoteAria: 'Pourcentage du vote populaire par parti aux élections provinciales du Québec de 2014, 2018 et 2022',
+        mapTitle: 'Une province en 125 circonscriptions', mapCaption: 'Répartition des sièges en 2022, par parti gagnant',
+        mapDescription: 'Carte indicative des résultats électoraux au Québec par région', mapDisclaimer: 'Points indicatifs, sans limites de circonscriptions',
+        archiveTitle: 'Dans les archives', archiveCaption: 'Faits marquants de la soirée électorale', archivePolls: 'Fermeture des bureaux de vote',
+        archivePollsDetail: 'Fin du vote à 20 h (HAE).', archiveMajority: 'La CAQ obtient un deuxième mandat majoritaire',
+        archiveMajorityDetail: 'Le parti de François Legault est reconduit au pouvoir.', archiveFinal: 'Décompte final des sièges confirmé', octoberFourth: '4 oct.',
+        feedConnecting: 'Connexion', feedUnavailableShort: 'Flux indisponible', feedDelayedShort: 'Mise à jour retardée',
+        liveLoading: 'Connexion aux résultats officiels…', preliminaryResults: 'Résultats préliminaires', finalResults: 'Résultats définitifs', candidateVotes: 'voix',
+        liveDisclosure: 'Les résultats préliminaires évoluent au fur et à mesure du dépouillement; ils seront confirmés après le recensement officiel.',
+        livePanelTitle: 'Résultats en direct', livePanelCaption: 'Données préliminaires officielles d’Élections Québec', waitingForUpdate: 'En attente de la première mise à jour',
+        refreshNow: 'Actualiser', officialResults: 'Résultats officiels ↗', stationsReported: 'Bureaux de vote dépouillés', validBallots: 'Votes valides',
+        reportedToDate: 'Résultats compilés à ce jour', votesCast: 'Votes exercés', includingRejected: 'Y compris les votes rejetés', ridingResults: 'Circonscriptions avec résultats',
+        of127Ridings: 'sur 127 circonscriptions', partyStandings: 'Résultats par parti', unofficialLeads: 'Circonscriptions en avance · non officiel',
+        preliminaryDisclosure: 'Résultats préliminaires; les candidats en avance ne sont pas déclarés élus.', autoRefreshDisclosure: 'Actualisation toutes les 60 secondes · le flux officiel peut être mis en cache jusqu’à 2 minutes.',
+        feedError: 'Les résultats en direct sont temporairement indisponibles.', feedErrorDetail: 'Consultez la page officielle pour obtenir les dernières données.',
+        liveUpdatedAt: 'Mis à jour à {time}', loadingRows: 'Chargement des résultats par circonscription…', retryRows: 'Impossible de charger les résultats. Réessayez.',
+        ridingTitle: 'Résultats par circonscription', ridingCaption: 'Candidats en tête et progression du dépouillement',
+        searchRidings: 'Chercher une circonscription', filterParty: 'Filtrer par parti gagnant', allParties: 'Tous les partis', liberalPartyShort: 'Libéral',
+        tableRiding: 'Circonscription', tableWinner: 'Candidat en tête', tableParty: 'Parti', tableShare: 'Part des voix', tableResult: 'Résultat', tableStations: 'Bureaux', partialRidingList: 'Liste partielle des circonscriptions', liveTableSource: 'Source : Élections Québec · Préliminaire',
+        footerTitle: 'La Veille · Référence électorale indépendante', historicalData: 'Données historiques :', elected2022: 'Élu · 2022',
+        noRidingsMatch: 'Aucune circonscription ne correspond aux filtres.', noCandidate: 'Aucun meneur déclaré',
+        ridingCountOne: '1 circonscription affichée sur {total}', ridingCountMany: '{shown} circonscriptions affichées sur {total}',
+        ridingToast: '{name} : {party} a obtenu {share} dans cet exemple de 2022.',
+        chartTooltipSeats: 'sièges', chartTooltipVote: 'du vote populaire'
+      }
+    };
+
+    let language = 'fr';
+    try {
+      const savedLanguage = localStorage.getItem('la-veille-language');
+      if (savedLanguage === 'en' || savedLanguage === 'fr') language = savedLanguage;
+    } catch {}
+
+    function translate(key) {
+      return translations[language][key] || translations.en[key] || key;
+    }
+
+    function applyLanguage() {
+      document.documentElement.lang = language;
+      document.title = translate('documentTitle');
+      document.querySelectorAll('[data-i18n]').forEach(element => {
+        element.textContent = translate(element.dataset.i18n);
+      });
+      document.querySelectorAll('[data-i18n-aria]').forEach(element => {
+        element.setAttribute('aria-label', translate(element.dataset.i18nAria));
+      });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+        element.setAttribute('placeholder', translate(element.dataset.i18nPlaceholder));
+      });
+      document.querySelectorAll('[data-language]').forEach(button => {
+        button.setAttribute('aria-pressed', String(button.dataset.language === language));
+      });
+    }
+
+    const parties = {
+      CAQ: { name: { en: 'Coalition Avenir Québec', fr: 'Coalition avenir Québec' }, color: '#176b52', short: { en: 'CAQ', fr: 'CAQ' } },
+      PLQ: { name: { en: 'Quebec Liberal Party', fr: 'Parti libéral du Québec' }, color: '#3476b8', short: { en: 'Liberal', fr: 'Libéral' } },
+      QS: { name: { en: 'Québec solidaire', fr: 'Québec solidaire' }, color: '#dfb34c', short: { en: 'QS', fr: 'QS' } },
+      PQ: { name: { en: 'Parti Québécois', fr: 'Parti québécois' }, color: '#263e83', short: { en: 'PQ', fr: 'PQ' } },
+      PCQ: { name: { en: 'Conservative Party of Quebec', fr: 'Parti conservateur du Québec' }, color: '#b85854', short: { en: 'Conservative', fr: 'Conservateur' } }
+    };
+    const electionData = {
+      years: [2014, 2018, 2022],
+      seats: {
+        CAQ: [22, 74, 90], PLQ: [70, 31, 21], PQ: [30, 10, 3], QS: [3, 10, 11], PCQ: [0, 0, 0]
+      },
+      vote: {
+        CAQ: [23.05, 37.42, 40.98], PLQ: [41.52, 24.82, 14.37], PQ: [25.38, 17.06, 14.60], QS: [7.63, 16.10, 15.43], PCQ: [0.39, 1.46, 12.91]
+      }
+    };
+    const liveFeedUrl = 'https://donnees.electionsquebec.qc.ca/production/provincial/resultats/resultats.json';
+    const officialResultsUrls = {
+      en: 'https://www.electionsquebec.qc.ca/en/results-and-statistics/provincial-general-elections-live-results/',
+      fr: 'https://www.electionsquebec.qc.ca/resultats-et-statistiques/resultats-elections-generales-provinciales-en-direct/'
+    };
+    const livePartyColors = ['#263e83', '#3476b8', '#b85854', '#dfb34c', '#176b52', '#008c95', '#bd6b38', '#687d72'];
+    const knownPartyColors = { PQ: '#263e83', 'PLQ/QLP': '#3476b8', PCOQ: '#b85854', QS: '#dfb34c', 'ÉCF-CAQ': '#176b52' };
+    const knownPartyNames = {
+      PQ: { en: 'Parti Québécois', fr: 'Parti québécois' },
+      'PLQ/QLP': { en: 'Quebec Liberal Party', fr: 'Parti libéral du Québec' },
+      PCOQ: { en: 'Quebec Conservative Party', fr: 'Parti conservateur du Québec' },
+      QS: { en: 'Québec solidaire', fr: 'Québec solidaire' },
+      'ÉCF-CAQ': { en: 'Christine Fréchette team · Coalition Avenir Québec', fr: 'Équipe Christine Fréchette · Coalition avenir Québec' },
+      'PVQ/GPQ': { en: 'Green Party of Quebec', fr: 'Parti vert du Québec' },
+      'PCQ/CPQ': { en: 'Canadian Party of Québec', fr: 'Parti canadien du Québec' },
+      'Ind.': { en: 'Independent candidates', fr: 'Candidats indépendants' }
+    };
+    let liveResults = null;
+    let liveRequestState = 'loading';
+    let liveRequestInProgress = false;
+
+    const legend = document.getElementById('legend');
+    const chart = document.getElementById('historyChart');
+    const chartMode = document.getElementById('chartMode');
+    const partyOrder = ['CAQ', 'PLQ', 'PQ', 'QS', 'PCQ'];
+    const numberFormatter = () => new Intl.NumberFormat(language === 'fr' ? 'fr-CA' : 'en-CA');
+
+    function escapeHTML(value) {
+      return String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+    }
+
+    function formatNumber(value, digits = 0) {
+      return new Intl.NumberFormat(language === 'fr' ? 'fr-CA' : 'en-CA', {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+      }).format(Number(value) || 0);
+    }
+
+    function formatPercent(value) {
+      return `${formatNumber(value, 2)}%`;
+    }
+
+    function partyName(party) {
+      const abbreviation = party.abreviationPartiPolitique || '';
+      if (knownPartyNames[abbreviation]) return knownPartyNames[abbreviation][language];
+      const names = String(party.nomPartiPolitique || abbreviation).split('/');
+      return names[language === 'fr' ? 0 : Math.min(1, names.length - 1)].trim();
+    }
+
+    function partyColor(abbreviation, index = 0) {
+      if (knownPartyColors[abbreviation]) return knownPartyColors[abbreviation];
+      let hash = 0;
+      for (const character of abbreviation) hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+      return livePartyColors[(hash + index) % livePartyColors.length];
+    }
+
+    function getLeader(riding) {
+      return [...(riding.candidats || [])].sort((first, second) => Number(second.nbVoteTotal) - Number(first.nbVoteTotal))[0] || null;
+    }
+
+    function renderLiveResults() {
+      const statusText = document.getElementById('liveStatusText');
+      const headerStatus = document.getElementById('headerFeedStatus');
+      const partyList = document.getElementById('liveParties');
+      document.getElementById('officialResultsLink').href = officialResultsUrls[language];
+
+      if (!liveResults) {
+        headerStatus.textContent = translate(liveRequestState === 'error' ? 'feedUnavailableShort' : 'feedConnecting');
+        statusText.textContent = translate(liveRequestState === 'error' ? 'feedError' : 'liveLoading');
+        partyList.innerHTML = `<p class="panel-caption">${translate(liveRequestState === 'error' ? 'feedErrorDetail' : 'liveLoading')}</p>`;
+        document.getElementById('liveUpdated').textContent = translate('waitingForUpdate');
+        renderLiveRidings();
+        return;
+      }
+
+      const statistics = liveResults.statistiques;
+      const partiesInRace = statistics.partisPolitiques || [];
+      const leader = [...partiesInRace].sort((first, second) => Number(second.nbCirconscriptionsEnAvance) - Number(first.nbCirconscriptionsEnAvance))[0];
+      const divisions = Number(statistics.nbCirconscription) || liveResults.circonscriptions.length;
+      document.getElementById('liveSeatCount').textContent = formatNumber(divisions);
+      document.getElementById('liveMajorityCount').textContent = formatNumber(Math.floor(divisions / 2) + 1);
+      document.getElementById('liveTurnout').textContent = formatNumber(statistics.tauxParticipationTotal, 2);
+      document.getElementById('liveLeaderAbbr').textContent = leader?.abreviationPartiPolitique || '—';
+      document.getElementById('liveLeaderName').textContent = leader ? partyName(leader) : '';
+      document.getElementById('liveLeaderCount').textContent = formatNumber(leader?.nbCirconscriptionsEnAvance || 0);
+      document.getElementById('liveStationsPercent').textContent = formatPercent(statistics.tauxBureauVoteRempli);
+      document.getElementById('liveStationsCount').textContent = `${formatNumber(statistics.nbBureauVoteRempli)} / ${formatNumber(statistics.nbBureauVote)}`;
+      document.getElementById('liveValidBallots').textContent = formatNumber(statistics.nbVoteValide);
+      document.getElementById('liveVotesCast').textContent = formatNumber(statistics.nbVoteExerce);
+      document.getElementById('liveRidingResults').textContent = formatNumber(statistics.nbCirconscriptionAvecResultat);
+      headerStatus.textContent = translate(liveRequestState === 'error' ? 'feedDelayedShort' : 'feedLive');
+      statusText.textContent = liveRequestState === 'error'
+        ? translate('feedError')
+        : translate(statistics.isResultatsFinaux ? 'finalResults' : 'preliminaryResults');
+      statusText.classList.toggle('live-error', liveRequestState === 'error');
+
+      const updatedValue = String(statistics.iso8601DateMAJ || '').replace(/,(\d{3})(?=[+-]\d{2}:\d{2}$)/, '.$1');
+      const updatedDate = new Date(updatedValue);
+      const updatedTime = Number.isNaN(updatedDate.getTime())
+        ? '—'
+        : new Intl.DateTimeFormat(language === 'fr' ? 'fr-CA' : 'en-CA', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Toronto' }).format(updatedDate);
+      document.getElementById('liveUpdated').textContent = translate('liveUpdatedAt').replace('{time}', updatedTime);
+
+      partyList.innerHTML = partiesInRace.slice(0, 6).map((party, index) => {
+        const abbreviation = party.abreviationPartiPolitique || '';
+        const color = partyColor(abbreviation, index);
+        const share = Math.max(0, Math.min(100, Number(party.tauxVoteTotal) || 0));
+        return `<div class="live-party-row"><div class="live-party-name" title="${escapeHTML(partyName(party))}"><i class="live-party-dot" style="background:${color}"></i><span>${escapeHTML(partyName(party))}</span></div><div class="live-party-votes">${formatNumber(party.nbVoteTotal)}<small>${formatPercent(party.tauxVoteTotal)}</small></div><div class="live-party-leads">${formatNumber(party.nbCirconscriptionsEnAvance)}<small>${translate('leadingRidings')}</small></div></div><div class="live-bar"><span style="width:${share}%;background:${color}"></span></div>`;
+      }).join('');
+      renderPartyOptions();
+      renderLiveRidings();
+    }
+
+    function renderPartyOptions() {
+      const select = document.getElementById('partyFilter');
+      const selected = select.value || 'all';
+      const partiesInRace = liveResults?.statistiques?.partisPolitiques || [];
+      const options = partiesInRace.map(party => ({ code: party.abreviationPartiPolitique, name: partyName(party) }))
+        .filter(party => party.code)
+        .sort((first, second) => first.name.localeCompare(second.name, language));
+      select.innerHTML = `<option value="all">${translate('allParties')}</option>${options.map(party => `<option value="${escapeHTML(party.code)}">${escapeHTML(party.name)}</option>`).join('')}`;
+      select.value = options.some(party => party.code === selected) ? selected : 'all';
+    }
+
+    function renderChart() {
+      const mode = chartMode.value;
+      const series = electionData[mode];
+      const maxValue = mode === 'seats' ? 125 : 100;
+      const plot = { x: 42, y: 14, width: 490, height: 158 };
+      const barWidth = 62;
+      const groupWidth = plot.width / electionData.years.length;
+      const grid = mode === 'seats' ? [0, 25, 50, 75, 100, 125] : [0, 25, 50, 75, 100];
+      legend.innerHTML = partyOrder.map(code => `<span><i style="background:${parties[code].color}"></i>${parties[code].short[language]}</span>`).join('');
+
+      let markup = '';
+      grid.forEach(value => {
+        const y = plot.y + plot.height - (value / maxValue) * plot.height;
+        markup += `<line class="gridline" x1="${plot.x}" y1="${y}" x2="${plot.x + plot.width}" y2="${y}"/><text x="${plot.x - 9}" y="${y + 3}" text-anchor="end">${mode === 'seats' ? value : `${value}%`}</text>`;
+      });
+      markup += `<line class="axisline" x1="${plot.x}" y1="${plot.y + plot.height}" x2="${plot.x + plot.width}" y2="${plot.y + plot.height}"/>`;
+      electionData.years.forEach((year, yearIndex) => {
+        const x = plot.x + groupWidth * yearIndex + (groupWidth - barWidth) / 2;
+        let yBottom = plot.y + plot.height;
+        partyOrder.forEach(code => {
+          const value = series[code][yearIndex];
+          if (!value) return;
+          const height = (value / maxValue) * plot.height;
+          yBottom -= height;
+          const unit = mode === 'seats' ? translate('chartTooltipSeats') : translate('chartTooltipVote');
+          markup += `<rect x="${x}" y="${yBottom}" width="${barWidth}" height="${height}" fill="${parties[code].color}" rx="1"><title>${year} ${parties[code].name[language]}: ${value}${mode === 'seats' ? ` ${unit}` : `% ${unit}`}</title></rect>`;
+        });
+        markup += `<text class="year" x="${x + barWidth / 2}" y="${plot.y + plot.height + 19}" text-anchor="middle">${year}</text>`;
+      });
+      chart.innerHTML = markup;
+      chart.setAttribute('aria-label', translate(mode === 'seats' ? 'chartSeatsAria' : 'chartVoteAria'));
+    }
+
+    function renderLiveRidings() {
+      const query = document.getElementById('ridingSearch').value.trim().toLocaleLowerCase();
+      const party = document.getElementById('partyFilter').value;
+      const allRidings = liveResults?.circonscriptions || [];
+      if (!liveResults) {
+        document.getElementById('ridingRows').innerHTML = `<tr><td class="empty" colspan="5">${translate(liveRequestState === 'error' ? 'retryRows' : 'loadingRows')}</td></tr>`;
+        document.getElementById('ridingCount').textContent = '';
+        return;
+      }
+      const visible = allRidings.filter(riding => {
+        const leader = getLeader(riding);
+        const candidateName = leader ? `${leader.prenom || ''} ${leader.nom || ''}` : '';
+        const matchesQuery = `${riding.nomCirconscription} ${candidateName}`.toLocaleLowerCase().includes(query);
+        return matchesQuery && (party === 'all' || leader?.abreviationPartiPolitique === party);
+      });
+      const rows = document.getElementById('ridingRows');
+      rows.innerHTML = visible.length ? visible.map(riding => {
+        const leader = getLeader(riding);
+        const candidateName = leader ? `${leader.prenom || ''} ${leader.nom || ''}`.trim() : translate('noCandidate');
+        const abbreviation = leader?.abreviationPartiPolitique || '';
+        return `<tr><td><div class="riding-name">${escapeHTML(riding.nomCirconscription)}</div></td><td>${escapeHTML(candidateName)}</td><td><span class="party-tag"><i style="background:${partyColor(abbreviation)}"></i>${escapeHTML(abbreviation || '—')}</span></td><td>${formatPercent(leader?.tauxVote)}<div class="riding-area">${formatNumber(leader?.nbVoteTotal)} ${translate('candidateVotes')}</div></td><td>${formatNumber(riding.nbBureauComplete)} / ${formatNumber(riding.nbBureauTotal)}<div class="riding-area">${formatPercent(riding.nbBureauTotal ? 100 * riding.nbBureauComplete / riding.nbBureauTotal : 0)}</div></td></tr>`;
+      }).join('') : `<tr><td class="empty" colspan="5">${translate('noRidingsMatch')}</td></tr>`;
+      const countKey = visible.length === 1 ? 'ridingCountOne' : 'ridingCountMany';
+      document.getElementById('ridingCount').textContent = translate(countKey).replace('{shown}', formatNumber(visible.length)).replace('{total}', formatNumber(allRidings.length));
+    }
+
+    async function loadLiveResults() {
+      if (liveRequestInProgress) return;
+      liveRequestInProgress = true;
+      const refreshButton = document.getElementById('refreshLive');
+      refreshButton.disabled = true;
+      refreshButton.classList.add('spinning');
+      try {
+        const response = await fetch(liveFeedUrl, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`Results feed returned ${response.status}`);
+        const payload = await response.json();
+        if (!payload.statistiques || !Array.isArray(payload.circonscriptions)) throw new Error('Unexpected results feed format');
+        liveResults = payload;
+        liveRequestState = 'ready';
+      } catch (error) {
+        liveRequestState = 'error';
+        console.error('Unable to refresh official election results:', error);
+      } finally {
+        liveRequestInProgress = false;
+        refreshButton.disabled = false;
+        refreshButton.classList.remove('spinning');
+        renderLiveResults();
+      }
+    }
+
+    let toastTimer;
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+    }
+
+    chartMode.addEventListener('change', renderChart);
+    document.getElementById('ridingSearch').addEventListener('input', renderLiveRidings);
+    document.getElementById('partyFilter').addEventListener('change', renderLiveRidings);
+    document.getElementById('refreshLive').addEventListener('click', loadLiveResults);
+    document.getElementById('dismissNotice').addEventListener('click', () => document.getElementById('notice').remove());
+    document.querySelectorAll('[data-language]').forEach(button => button.addEventListener('click', () => {
+      language = button.dataset.language;
+      try { localStorage.setItem('la-veille-language', language); } catch {}
+      applyLanguage();
+      renderChart();
+      renderLiveResults();
+    }));
+    document.querySelectorAll('.nav button').forEach(button => button.addEventListener('click', () => {
+      document.querySelector('.nav button.active').classList.remove('active');
+      button.classList.add('active');
+      const destinations = { overview: 'top', ridings: 'ridingSection', history: 'historyPanel' };
+      document.getElementById(destinations[button.dataset.view]).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }));
+    applyLanguage();
+    renderChart();
+    renderLiveResults();
+    loadLiveResults();
+    setInterval(loadLiveResults, 60000);
+  </script>
+</body>
+</html>
