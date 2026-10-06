@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f5ef">
-  <title>La Veille — Quebec election tracker</title>
+  <title>Élections Québec 2026</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
@@ -219,9 +219,9 @@
 <body>
   <div class="app">
     <header class="topbar">
-      <a class="brand" href="#top" aria-label="La Veille home" data-i18n-aria="brandHome">
+      <a class="brand" href="#top" aria-label="Élections Québec 2026 home" data-i18n-aria="brandHome">
         <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v18M5.5 7.5 12 11l6.5-3.5M5.5 16.5 12 13l6.5 3.5M8 5l4 2 4-2M8 19l4-2 4 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-        <span class="brand-name">La Veille</span><span class="brand-note" data-i18n="brandNote">Quebec election desk</span>
+        <span class="brand-name">Élections Québec 2026</span><span class="brand-note" data-i18n="brandNote">Quebec election desk</span>
       </a>
       <nav class="nav" aria-label="Main navigation" data-i18n-aria="mainNavigation">
         <button class="active" data-view="overview" data-i18n="navOverview">Overview</button>
@@ -289,14 +289,14 @@
           <div class="table-foot"><span id="ridingCount"></span><span data-i18n="liveTableSource">Source: Élections Québec · Preliminary</span></div>
         </article>
       </section>
-      <footer class="footer"><span data-i18n="footerTitle">La Veille · An independent election reference</span><span><span data-i18n="historicalData">Historical data:</span> <a href="https://www.electionsquebec.qc.ca/" target="_blank" rel="noreferrer">Élections Québec</a></span></footer>
+      <footer class="footer"><span data-i18n="footerTitle">Élections Québec 2026 · An independent election reference</span><span><span data-i18n="historicalData">Historical data:</span> <a href="https://www.electionsquebec.qc.ca/" target="_blank" rel="noreferrer">Élections Québec</a></span></footer>
     </main>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script>
     const translations = {
       en: {
-        documentTitle: 'La Veille — Quebec election tracker', brandHome: 'La Veille home', brandNote: 'Quebec election desk', mainNavigation: 'Main navigation',
+        documentTitle: 'Élections Québec 2026', brandHome: 'Élections Québec 2026 home', brandNote: 'Quebec election desk', mainNavigation: 'Main navigation',
         navOverview: 'Overview', navRidings: 'Ridings', navHistory: 'History', feedPending: '2026 · FEED PENDING', feedLive: '2026 · LIVE RESULTS', languageSelector: 'Language',
         region: 'Quebec · National Assembly', pageTitle: 'The election desk', pageSubtitle: 'A clear view of the races, the ridings, and the numbers that shape Quebec.',
         electionName: 'Provincial election · 2026', electionStatus: 'Monday, October 5 · Live results', liveUnavailable: 'Live results are not connected.',
@@ -326,14 +326,14 @@
         ridingTitle: 'Live riding results', ridingCaption: 'Current candidate leaders and polling-station progress',
         searchRidings: 'Find a riding', filterParty: 'Filter by winning party', allParties: 'All parties', liberalPartyShort: 'Liberal',
         tableRiding: 'Riding', tableWinner: 'Leading candidate', tableParty: 'Party', tableShare: 'Share', tableResult: 'Result', tableStations: 'Stations', partialRidingList: 'Not a complete riding list', liveTableSource: 'Source: Élections Québec · Preliminary',
-        footerTitle: 'La Veille · An independent election reference', historicalData: 'Historical data:', elected2022: 'Elected · 2022',
+        footerTitle: 'Élections Québec 2026 · An independent election reference', historicalData: 'Historical data:', elected2022: 'Elected · 2022',
         noRidingsMatch: 'No ridings match these filters.', noCandidate: 'No reported leader',
         ridingCountOne: 'Showing 1 of {total} ridings', ridingCountMany: 'Showing {shown} of {total} ridings',
         ridingToast: '{name}: {party} won {share} in this illustrative 2022 record.',
         chartTooltipSeats: 'seats', chartTooltipVote: 'of the popular vote'
       },
       fr: {
-        documentTitle: 'La Veille — Suivi des élections au Québec', brandHome: 'Accueil de La Veille', brandNote: 'Le bureau électoral du Québec', mainNavigation: 'Navigation principale',
+        documentTitle: 'Élections Québec 2026', brandHome: 'Accueil d’Élections Québec 2026', brandNote: 'Le bureau électoral du Québec', mainNavigation: 'Navigation principale',
         navOverview: 'Aperçu', navRidings: 'Circonscriptions', navHistory: 'Historique', feedPending: '2026 · FLUX EN ATTENTE', feedLive: '2026 · RÉSULTATS EN DIRECT', languageSelector: 'Langue',
         region: 'Québec · Assemblée nationale', pageTitle: 'Le bureau des élections', pageSubtitle: 'Suivez les courses, les circonscriptions et les chiffres qui façonnent le Québec.',
         electionName: 'Élection générale provinciale · 2026', electionStatus: 'Lundi 5 octobre · Résultats en direct', liveUnavailable: 'Les résultats en direct ne sont pas connectés.',
@@ -363,7 +363,7 @@
         ridingTitle: 'Résultats par circonscription', ridingCaption: 'Candidats en tête et progression du dépouillement',
         searchRidings: 'Chercher une circonscription', filterParty: 'Filtrer par parti gagnant', allParties: 'Tous les partis', liberalPartyShort: 'Libéral',
         tableRiding: 'Circonscription', tableWinner: 'Candidat en tête', tableParty: 'Parti', tableShare: 'Part des voix', tableResult: 'Résultat', tableStations: 'Bureaux', partialRidingList: 'Liste partielle des circonscriptions', liveTableSource: 'Source : Élections Québec · Préliminaire',
-        footerTitle: 'La Veille · Référence électorale indépendante', historicalData: 'Données historiques :', elected2022: 'Élu · 2022',
+        footerTitle: 'Élections Québec 2026 · Référence électorale indépendante', historicalData: 'Données historiques :', elected2022: 'Élu · 2022',
         noRidingsMatch: 'Aucune circonscription ne correspond aux filtres.', noCandidate: 'Aucun meneur déclaré',
         ridingCountOne: '1 circonscription affichée sur {total}', ridingCountMany: '{shown} circonscriptions affichées sur {total}',
         ridingToast: '{name} : {party} a obtenu {share} dans cet exemple de 2022.',

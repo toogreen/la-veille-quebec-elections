@@ -1,4 +1,4 @@
-# La Veille
+# Élections Québec 2026
 
 A bilingual (French and English) dashboard for following Quebec's 2026 provincial election.
 
