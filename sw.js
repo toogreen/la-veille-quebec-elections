@@ -1,4 +1,4 @@
-const CACHE_NAME = 'la-veille-quebec-elections-v1';
+const CACHE_NAME = 'la-veille-quebec-elections-v2';
 const APP_SHELL = [
   './',
   './index.html',

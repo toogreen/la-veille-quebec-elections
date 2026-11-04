@@ -335,7 +335,7 @@
         archiveTitle: 'From the archive', archiveCaption: 'Milestones from election night', archivePolls: 'Polls close across Quebec',
         archivePollsDetail: 'Voting concludes at 8 p.m. EDT.', archiveMajority: 'CAQ wins a second majority',
         archiveMajorityDetail: "François Legault's party returns to office.", archiveFinal: 'Final seat count confirmed', octoberFourth: 'Oct 4',
-        feedConnecting: 'Connecting', feedUnavailableShort: 'Feed unavailable', feedDelayedShort: 'Update delayed',
+        feedConnecting: 'Connecting', feedUnavailableShort: 'Feed unavailable', feedDelayedShort: 'Update delayed', feedSnapshotShort: '2026 · FINAL RESULTS',
         liveLoading: 'Connecting to official results…', preliminaryResults: 'Preliminary results', finalResults: 'Final results', candidateVotes: 'votes',
         liveDisclosure: 'Preliminary results update as polling stations report; final results are confirmed after the official count.',
         livePanelTitle: 'Live results', livePanelCaption: 'Official preliminary counts from Élections Québec', waitingForUpdate: 'Waiting for first update',
@@ -372,7 +372,7 @@
         archiveTitle: 'Dans les archives', archiveCaption: 'Faits marquants de la soirée électorale', archivePolls: 'Fermeture des bureaux de vote',
         archivePollsDetail: 'Fin du vote à 20 h (HAE).', archiveMajority: 'La CAQ obtient un deuxième mandat majoritaire',
         archiveMajorityDetail: 'Le parti de François Legault est reconduit au pouvoir.', archiveFinal: 'Décompte final des sièges confirmé', octoberFourth: '4 oct.',
-        feedConnecting: 'Connexion', feedUnavailableShort: 'Flux indisponible', feedDelayedShort: 'Mise à jour retardée',
+        feedConnecting: 'Connexion', feedUnavailableShort: 'Flux indisponible', feedDelayedShort: 'Mise à jour retardée', feedSnapshotShort: '2026 · RÉSULTATS FINAUX',
         liveLoading: 'Connexion aux résultats officiels…', preliminaryResults: 'Résultats préliminaires', finalResults: 'Résultats définitifs', candidateVotes: 'voix',
         liveDisclosure: 'Les résultats préliminaires évoluent au fur et à mesure du dépouillement; ils seront confirmés après le recensement officiel.',
         livePanelTitle: 'Résultats en direct', livePanelCaption: 'Données préliminaires officielles d’Élections Québec', waitingForUpdate: 'En attente de la première mise à jour',
@@ -437,6 +437,8 @@
       }
     };
     const liveFeedUrl = 'https://donnees.electionsquebec.qc.ca/production/provincial/resultats/resultats.json';
+    // Final results archived by Élections Québec (gen2026-10-05), used once the live feed is taken down.
+    const snapshotFeedUrl = './data/resultats-2026-10-05.json';
     const officialResultsUrls = {
       en: 'https://www.electionsquebec.qc.ca/en/results-and-statistics/provincial-general-elections-live-results/',
       fr: 'https://www.electionsquebec.qc.ca/resultats-et-statistiques/resultats-elections-generales-provinciales-en-direct/'
@@ -526,7 +528,7 @@
       document.getElementById('liveValidBallots').textContent = formatNumber(statistics.nbVoteValide);
       document.getElementById('liveVotesCast').textContent = formatNumber(statistics.nbVoteExerce);
       document.getElementById('liveRidingResults').textContent = formatNumber(statistics.nbCirconscriptionAvecResultat);
-      headerStatus.textContent = translate(liveRequestState === 'error' ? 'feedDelayedShort' : 'feedLive');
+      headerStatus.textContent = translate(liveRequestState === 'error' ? 'feedDelayedShort' : liveRequestState === 'snapshot' ? 'feedSnapshotShort' : 'feedLive');
       statusText.textContent = liveRequestState === 'error'
         ? translate('feedError')
         : translate(statistics.isResultatsFinaux ? 'finalResults' : 'preliminaryResults');
@@ -619,6 +621,14 @@
       document.getElementById('ridingCount').textContent = translate(countKey).replace('{shown}', formatNumber(visible.length)).replace('{total}', formatNumber(allRidings.length));
     }
 
+    async function fetchResults(url) {
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`Results feed returned ${response.status}`);
+      const payload = await response.json();
+      if (!payload.statistiques || !Array.isArray(payload.circonscriptions)) throw new Error('Unexpected results feed format');
+      return payload;
+    }
+
     async function loadLiveResults() {
       if (liveRequestInProgress) return;
       liveRequestInProgress = true;
@@ -626,15 +636,21 @@
       refreshButton.disabled = true;
       refreshButton.classList.add('spinning');
       try {
-        const response = await fetch(liveFeedUrl, { cache: 'no-store' });
-        if (!response.ok) throw new Error(`Results feed returned ${response.status}`);
-        const payload = await response.json();
-        if (!payload.statistiques || !Array.isArray(payload.circonscriptions)) throw new Error('Unexpected results feed format');
-        liveResults = payload;
+        liveResults = await fetchResults(liveFeedUrl);
         liveRequestState = 'ready';
       } catch (error) {
-        liveRequestState = 'error';
         console.error('Unable to refresh official election results:', error);
+        if (!liveResults || liveRequestState === 'snapshot') {
+          try {
+            liveResults = await fetchResults(snapshotFeedUrl);
+            liveRequestState = 'snapshot';
+          } catch (snapshotError) {
+            liveRequestState = 'error';
+            console.error('Unable to load archived election results:', snapshotError);
+          }
+        } else {
+          liveRequestState = 'error';
+        }
       } finally {
         liveRequestInProgress = false;
         refreshButton.disabled = false;
